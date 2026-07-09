@@ -294,6 +294,247 @@ if st.button("🧮 TÍNH TOÀN BỘ 10 PHÒNG"):
 
     st.divider()
 
+    st.header("📱 Tin nhắn gửi nhanh")
+
+
+    for row in ketqua:
+
+
+        msg=f"""
+🏠 THÔNG BÁO TIỀN PHÒNG
+
+{row[0]}
+
+⚡ Điện: {row[1]} kWh
+💧 Nước: {row[2]} m3
+
+💰 Tổng tiền:
+{row[3]:,.0f} VNĐ
+
+Vui lòng thanh toán đúng hạn.
+Xin cảm ơn!
+"""
+
+
+        st.text_area(
+            row[0],
+            msg,
+            height=150
+        )
+
+
+
+    # ================= XUẤT EXCEL =================
+
+
+    file="bao_cao_nha_tro.xlsx"
+
+
+    df.to_excel(
+        file,
+        index=False
+    )
+
+
+    with open(file,"rb") as f:
+
+        st.download_button(
+            "📥 Tải báo cáo Excel",
+            f,
+            file_name=file
+        )                min_value=0,
+                key=f"nc{i}"
+            )
+
+
+            nuoc_moi = st.number_input(
+                "Nước mới",
+                min_value=0,
+                key=f"nm{i}"
+            )
+
+
+        with c3:
+
+            nguoi = st.number_input(
+                "Số người",
+                1,
+                10,
+                1,
+                key=f"ng{i}"
+            )
+
+
+        with c4:
+
+            tt = st.selectbox(
+                "Trạng thái",
+                trang_thai,
+                key=f"tt{i}"
+            )
+
+
+
+        ds_phong.append(
+            {
+                "Phòng":f"Phòng {i}",
+                "Điện cũ":dien_cu,
+                "Điện mới":dien_moi,
+                "Nước cũ":nuoc_cu,
+                "Nước mới":nuoc_moi,
+                "Người":nguoi,
+                "Trạng thái":tt
+            }
+        )
+
+
+
+# ================= TÍNH TOÁN =================
+
+
+if st.button("🧮 TÍNH TOÀN BỘ 10 PHÒNG"):
+
+
+    ketqua=[]
+
+    tong_doanhthu=0
+
+    tong_dien=0
+
+    tong_nuoc=0
+
+
+
+    for p in ds_phong:
+
+
+        dien = p["Điện mới"]-p["Điện cũ"]
+
+        nuoc = p["Nước mới"]-p["Nước cũ"]
+
+
+
+        if dien <0 or nuoc <0:
+
+            st.error(
+                f"{p['Phòng']} sai chỉ số"
+            )
+
+            continue
+
+
+
+        tien_dien=dien*gia_dien
+
+        tien_nuoc=nuoc*gia_nuoc
+
+
+
+        tong=(
+            gia_phong+
+            tien_dien+
+            tien_nuoc+
+            gia_wifi+
+            gia_rac
+        )
+
+
+
+        tong_doanhthu+=tong
+
+        tong_dien+=dien
+
+        tong_nuoc+=nuoc
+
+
+
+        ketqua.append(
+            [
+                p["Phòng"],
+                dien,
+                nuoc,
+                tong,
+                p["Trạng thái"]
+            ]
+        )
+
+
+
+    df=pd.DataFrame(
+        ketqua,
+        columns=[
+            "Phòng",
+            "Điện",
+            "Nước",
+            "Tổng tiền",
+            "Trạng thái"
+        ]
+    )
+
+
+    st.divider()
+
+    st.header("📊 DASHBOARD")
+
+
+    a,b,c=st.columns(3)
+
+
+    a.metric(
+        "💰 Doanh thu",
+        f"{tong_doanhthu:,.0f} đ"
+    )
+
+
+    b.metric(
+        "⚡ Tổng điện",
+        f"{tong_dien} kWh"
+    )
+
+
+    c.metric(
+        "💧 Tổng nước",
+        f"{tong_nuoc} m3"
+    )
+
+
+
+    st.dataframe(
+        df,
+        use_container_width=True
+    )
+
+
+
+    st.subheader("📈 Biểu đồ doanh thu phòng")
+
+    st.bar_chart(
+        df.set_index("Phòng")["Tổng tiền"]
+    )
+
+
+
+    # ================= CẢNH BÁO =================
+
+
+    st.subheader("⚠️ Cảnh báo")
+
+
+    for row in ketqua:
+
+        if row[1]>300:
+
+            st.warning(
+                f"{row[0]} sử dụng điện cao: {row[1]} kWh"
+            )
+
+
+
+    # ================= TIN NHẮN =================
+
+
+    st.divider()
+
 # ================= TIN NHẮN ZALO NHÓM =================
 
 st.divider()
