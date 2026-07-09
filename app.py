@@ -294,34 +294,65 @@ if st.button("🧮 TÍNH TOÀN BỘ 10 PHÒNG"):
 
     st.divider()
 
-    st.header("📱 Tin nhắn gửi nhanh")
+# ================= TIN NHẮN ZALO NHÓM =================
+
+st.divider()
+
+st.header("📱 Tin nhắn thống kê nhanh gửi nhóm Zalo")
 
 
-    for row in ketqua:
+ngay_thang = datetime.now().strftime("%d/%m/%Y")
 
 
-        msg=f"""
-🏠 THÔNG BÁO TIỀN PHÒNG
+tin_nhan_nhom = f"""
+🏠 THÔNG BÁO TIỀN PHÒNG NHÀ TRỌ
+📅 Ngày lập: {ngay_thang}
 
-{row[0]}
+Kính gửi các phòng:
 
-⚡ Điện: {row[1]} kWh
-💧 Nước: {row[2]} m3
-
-💰 Tổng tiền:
-{row[3]:,.0f} VNĐ
-
-Vui lòng thanh toán đúng hạn.
-Xin cảm ơn!
 """
 
 
-        st.text_area(
-            row[0],
-            msg,
-            height=150
-        )
+for row in ketqua:
 
+    phong = row[0]
+    dien = row[1]
+    nuoc = row[2]
+    tien = row[3]
+    trangthai = row[4]
+
+
+    tin_nhan_nhom += f"""
+━━━━━━━━━━━━━━
+🏠 {phong}
+⚡ Điện: {dien} kWh
+💧 Nước: {nuoc} m³
+💰 Tổng tiền: {tien:,.0f} VNĐ
+📌 Trạng thái: {trangthai}
+
+"""
+
+
+tin_nhan_nhom += f"""
+━━━━━━━━━━━━━━
+
+📊 TỔNG KẾT NHÀ TRỌ
+
+🏠 Số phòng: 10
+💰 Tổng doanh thu: {tong_doanhthu:,.0f} VNĐ
+⚡ Tổng điện: {tong_dien} kWh
+💧 Tổng nước: {tong_nuoc} m³
+
+Vui lòng kiểm tra và thanh toán đúng hạn.
+Xin cảm ơn mọi người! ❤️
+"""
+
+
+st.text_area(
+    "📋 Copy nội dung gửi nhóm Zalo",
+    value=tin_nhan_nhom,
+    height=450
+)
 
 
     # ================= XUẤT EXCEL =================
