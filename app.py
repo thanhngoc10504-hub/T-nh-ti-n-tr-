@@ -210,3 +210,199 @@ if st.button("🧮 TÍNH TOÀN BỘ 10 PHÒNG"):
                 p["Trạng thái"]
             ]
         )
+    # ================= BẢNG TỔNG HỢP =================
+
+    df = pd.DataFrame(
+        ketqua,
+        columns=[
+            "Phòng",
+            "Điện tiêu thụ (kWh)",
+            "Nước tiêu thụ (m³)",
+            "Tổng tiền (VNĐ)",
+            "Trạng thái"
+        ]
+    )
+
+    st.divider()
+    st.header("📊 DASHBOARD")
+
+    # ===== Dashboard =====
+
+    a, b, c, d = st.columns(4)
+
+    a.metric(
+        "💰 Tổng doanh thu",
+        f"{tong_doanhthu:,.0f} VNĐ"
+    )
+
+    b.metric(
+        "⚡ Điện tiêu thụ",
+        f"{tong_dien} kWh"
+    )
+
+    c.metric(
+        "💧 Nước tiêu thụ",
+        f"{tong_nuoc} m³"
+    )
+
+    d.metric(
+        "🏠 Tổng số phòng",
+        f"{len(ketqua)}"
+    )
+
+    st.subheader("📌 Tổng chỉ số điện - nước")
+
+    x1, x2, x3, x4 = st.columns(4)
+
+    x1.metric(
+        "⚡ Điện cũ",
+        f"{tong_dien_cu}"
+    )
+
+    x2.metric(
+        "⚡ Điện mới",
+        f"{tong_dien_moi}"
+    )
+
+    x3.metric(
+        "💧 Nước cũ",
+        f"{tong_nuoc_cu}"
+    )
+
+    x4.metric(
+        "💧 Nước mới",
+        f"{tong_nuoc_moi}"
+    )
+
+    st.divider()
+
+    st.subheader("📋 Bảng tổng kết")
+
+    st.dataframe(
+        df,
+        use_container_width=True
+    )
+
+    st.subheader("📈 Biểu đồ doanh thu từng phòng")
+
+    st.bar_chart(
+        df.set_index("Phòng")["Tổng tiền (VNĐ)"]
+    )
+
+    # ================= CẢNH BÁO =================
+
+    st.subheader("⚠️ Cảnh báo")
+
+    for row in ketqua:
+
+        if row[1] > 300:
+
+            st.warning(
+                f"{row[0]} tiêu thụ điện cao ({row[1]} kWh). Nên kiểm tra lại."
+            )
+
+    # ================= TIN NHẮN TỪNG PHÒNG =================
+
+    st.divider()
+
+    st.header("📱 Tin nhắn từng phòng")
+
+    for row in ketqua:
+
+        msg = f"""
+🏠 THÔNG BÁO TIỀN PHÒNG
+
+{row[0]}
+
+⚡ Điện: {row[1]} kWh
+💧 Nước: {row[2]} m³
+
+💰 Tổng tiền phải thanh toán:
+{row[3]:,.0f} VNĐ
+
+📌 Trạng thái: {row[4]}
+
+Vui lòng thanh toán đúng hạn.
+Xin cảm ơn!
+"""
+
+        st.text_area(
+            f"Tin nhắn {row[0]}",
+            value=msg,
+            height=180
+        )
+
+    # ================= TIN NHẮN NHÓM ZALO =================
+
+    st.divider()
+
+    st.header("📢 Tin nhắn tổng hợp gửi nhóm Zalo")
+
+    ngay = datetime.now().strftime("%d/%m/%Y")
+
+    zalo = f"""
+🏠 THÔNG BÁO TIỀN PHÒNG
+
+📅 Ngày: {ngay}
+
+Kính gửi toàn bộ các phòng:
+
+"""
+
+    for row in ketqua:
+
+        zalo += f"""
+━━━━━━━━━━━━━━━━━━
+🏠 {row[0]}
+⚡ Điện: {row[1]} kWh
+💧 Nước: {row[2]} m³
+💰 Tổng tiền: {row[3]:,.0f} VNĐ
+📌 {row[4]}
+"""
+
+    zalo += f"""
+
+━━━━━━━━━━━━━━━━━━
+
+📊 TỔNG KẾT
+
+🏠 Tổng số phòng: {len(ketqua)}
+
+💰 Tổng doanh thu:
+{tong_doanhthu:,.0f} VNĐ
+
+⚡ Tổng điện tiêu thụ:
+{tong_dien} kWh
+
+💧 Tổng nước tiêu thụ:
+{tong_nuoc} m³
+
+Xin mọi người vui lòng thanh toán đúng hạn.
+Xin cảm ơn!
+"""
+
+    st.text_area(
+        "📋 Copy gửi nhóm Zalo",
+        value=zalo,
+        height=450
+    )
+
+    # ================= XUẤT EXCEL =================
+
+    st.divider()
+
+    file = "bao_cao_nha_tro.xlsx"
+
+    df.to_excel(
+        file,
+        index=False
+    )
+
+    with open(file, "rb") as f:
+
+        st.download_button(
+            "📥 Tải báo cáo Excel",
+            data=f,
+            file_name=file,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
