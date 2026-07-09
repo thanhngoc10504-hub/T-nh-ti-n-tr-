@@ -1,191 +1,261 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
+import os
+
 
 # ================= CẤU HÌNH =================
 
 st.set_page_config(
-    page_title="Quản lý tiền phòng trọ",
+    page_title="Quản lý nhà trọ thông minh",
     page_icon="🏠",
     layout="wide"
 )
 
-st.title("🏠 HỆ THỐNG TÍNH TIỀN PHÒNG TRỌ TỰ ĐỘNG")
-st.write("Tính tiền cùng lúc cho 10 phòng trọ")
+
+st.title("🏠 HỆ THỐNG QUẢN LÝ NHÀ TRỌ THÔNG MINH")
+
+st.write(
+    "Tính tiền - Theo dõi doanh thu - Quản lý 10 phòng"
+)
 
 st.divider()
 
 
-# ================= GIÁ DỊCH VỤ =================
+# ================= SIDEBAR GIÁ =================
 
-st.sidebar.header("⚙️ Cấu hình bảng giá")
+st.sidebar.header("⚙️ CẤU HÌNH GIÁ")
+
 
 gia_phong = st.sidebar.number_input(
-    "Tiền phòng (VNĐ)",
-    value=2500000,
-    step=100000
+    "Tiền phòng",
+    value=2500000
 )
+
 
 gia_dien = st.sidebar.number_input(
     "Giá điện/kWh",
-    value=3500,
-    step=100
+    value=3500
 )
 
+
 gia_nuoc = st.sidebar.number_input(
-    "Giá nước/khối",
-    value=15000,
-    step=500
+    "Giá nước/m3",
+    value=15000
 )
+
 
 gia_wifi = st.sidebar.number_input(
     "Wifi",
-    value=100000,
-    step=10000
+    value=100000
 )
+
 
 gia_rac = st.sidebar.number_input(
-    "Rác & dịch vụ",
-    value=50000,
-    step=5000
+    "Rác + dịch vụ",
+    value=50000
 )
 
 
-# ================= NHẬP 10 PHÒNG =================
 
-st.header("📝 Nhập thông tin 10 phòng")
+# ================= NHẬP DỮ LIỆU =================
+
+st.header("📝 Dữ liệu 10 phòng")
 
 
-phong_data = []
+ds_phong=[]
+
+
+trang_thai = [
+    "🟢 Đã thanh toán",
+    "🔴 Chưa thanh toán",
+    "🟡 Đang sửa chữa",
+    "⚪ Phòng trống"
+]
 
 
 for i in range(1,11):
 
     with st.expander(f"🏠 Phòng {i}"):
 
-        col1,col2,col3 = st.columns(3)
+        c1,c2,c3,c4 = st.columns(4)
 
-        with col1:
+
+        with c1:
+
             dien_cu = st.number_input(
-                f"Điện cũ P{i}",
+                "Điện cũ",
                 min_value=0,
-                key=f"diencu{i}"
+                key=f"dc{i}"
             )
+
 
             dien_moi = st.number_input(
-                f"Điện mới P{i}",
+                "Điện mới",
                 min_value=0,
-                key=f"dienmoi{i}"
+                key=f"dm{i}"
             )
 
 
-        with col2:
+        with c2:
 
             nuoc_cu = st.number_input(
-                f"Nước cũ P{i}",
+                "Nước cũ",
                 min_value=0,
-                key=f"nuoccu{i}"
+                key=f"nc{i}"
             )
+
 
             nuoc_moi = st.number_input(
-                f"Nước mới P{i}",
+                "Nước mới",
                 min_value=0,
-                key=f"nuocmoi{i}"
+                key=f"nm{i}"
             )
 
 
-        with col3:
+        with c3:
 
-            so_nguoi = st.number_input(
-                f"Số người P{i}",
-                min_value=1,
-                max_value=10,
-                value=1,
-                key=f"nguoi{i}"
+            nguoi = st.number_input(
+                "Số người",
+                1,
+                10,
+                1,
+                key=f"ng{i}"
             )
 
 
-        phong_data.append(
+        with c4:
+
+            tt = st.selectbox(
+                "Trạng thái",
+                trang_thai,
+                key=f"tt{i}"
+            )
+
+
+
+        ds_phong.append(
             {
                 "Phòng":f"Phòng {i}",
                 "Điện cũ":dien_cu,
                 "Điện mới":dien_moi,
                 "Nước cũ":nuoc_cu,
                 "Nước mới":nuoc_moi,
-                "Số người":so_nguoi
+                "Người":nguoi,
+                "Trạng thái":tt
             }
         )
+
 
 
 # ================= TÍNH TOÁN =================
 
 
-if st.button("🧮 TÍNH TIỀN 10 PHÒNG"):
-
-    ket_qua=[]
-
-    tong_doanh_thu=0
+if st.button("🧮 TÍNH TOÀN BỘ 10 PHÒNG"):
 
 
-    for p in phong_data:
+    ketqua=[]
 
-        dien = p["Điện mới"] - p["Điện cũ"]
-        nuoc = p["Nước mới"] - p["Nước cũ"]
+    tong_doanhthu=0
+
+    tong_dien=0
+
+    tong_nuoc=0
 
 
-        if dien <0 or nuoc<0:
+
+    for p in ds_phong:
+
+
+        dien = p["Điện mới"]-p["Điện cũ"]
+
+        nuoc = p["Nước mới"]-p["Nước cũ"]
+
+
+
+        if dien <0 or nuoc <0:
 
             st.error(
-                f"{p['Phòng']} nhập sai chỉ số!"
+                f"{p['Phòng']} sai chỉ số"
             )
 
             continue
 
 
-        tien_dien = dien * gia_dien
 
-        tien_nuoc = nuoc * gia_nuoc
+        tien_dien=dien*gia_dien
+
+        tien_nuoc=nuoc*gia_nuoc
 
 
-        tong = (
-            gia_phong
-            + tien_dien
-            + tien_nuoc
-            + gia_wifi
-            + gia_rac
+
+        tong=(
+            gia_phong+
+            tien_dien+
+            tien_nuoc+
+            gia_wifi+
+            gia_rac
         )
 
 
-        tong_doanh_thu += tong
+
+        tong_doanhthu+=tong
+
+        tong_dien+=dien
+
+        tong_nuoc+=nuoc
 
 
-        ket_qua.append(
+
+        ketqua.append(
             [
                 p["Phòng"],
                 dien,
-                tien_dien,
                 nuoc,
-                tien_nuoc,
-                tong
+                tong,
+                p["Trạng thái"]
             ]
         )
 
 
-    st.divider()
 
-    st.header("📊 BẢNG TỔNG HỢP")
-
-
-    df = pd.DataFrame(
-        ket_qua,
+    df=pd.DataFrame(
+        ketqua,
         columns=[
             "Phòng",
-            "Điện(kWh)",
-            "Tiền điện",
-            "Nước(m3)",
-            "Tiền nước",
-            "Tổng tiền"
+            "Điện",
+            "Nước",
+            "Tổng tiền",
+            "Trạng thái"
         ]
     )
+
+
+    st.divider()
+
+    st.header("📊 DASHBOARD")
+
+
+    a,b,c=st.columns(3)
+
+
+    a.metric(
+        "💰 Doanh thu",
+        f"{tong_doanhthu:,.0f} đ"
+    )
+
+
+    b.metric(
+        "⚡ Tổng điện",
+        f"{tong_dien} kWh"
+    )
+
+
+    c.metric(
+        "💧 Tổng nước",
+        f"{tong_nuoc} m3"
+    )
+
 
 
     st.dataframe(
@@ -194,23 +264,82 @@ if st.button("🧮 TÍNH TIỀN 10 PHÒNG"):
     )
 
 
-    st.metric(
-        "💰 TỔNG DOANH THU 10 PHÒNG",
-        f"{tong_doanh_thu:,.0f} VNĐ"
+
+    st.subheader("📈 Biểu đồ doanh thu phòng")
+
+    st.bar_chart(
+        df.set_index("Phòng")["Tổng tiền"]
     )
 
 
-    st.subheader("🧾 Chi tiết hóa đơn")
+
+    # ================= CẢNH BÁO =================
 
 
-    for row in ket_qua:
+    st.subheader("⚠️ Cảnh báo")
 
-        st.write(
-            f"""
-            ### {row[0]}
-            - Điện: {row[1]} kWh = {row[2]:,.0f} VNĐ
-            - Nước: {row[3]} m3 = {row[4]:,.0f} VNĐ
-            - Tiền phòng + dịch vụ
-            - **Tổng: {row[5]:,.0f} VNĐ**
-            """
+
+    for row in ketqua:
+
+        if row[1]>300:
+
+            st.warning(
+                f"{row[0]} sử dụng điện cao: {row[1]} kWh"
+            )
+
+
+
+    # ================= TIN NHẮN =================
+
+
+    st.divider()
+
+    st.header("📱 Tin nhắn gửi nhanh")
+
+
+    for row in ketqua:
+
+
+        msg=f"""
+🏠 THÔNG BÁO TIỀN PHÒNG
+
+{row[0]}
+
+⚡ Điện: {row[1]} kWh
+💧 Nước: {row[2]} m3
+
+💰 Tổng tiền:
+{row[3]:,.0f} VNĐ
+
+Vui lòng thanh toán đúng hạn.
+Xin cảm ơn!
+"""
+
+
+        st.text_area(
+            row[0],
+            msg,
+            height=150
+        )
+
+
+
+    # ================= XUẤT EXCEL =================
+
+
+    file="bao_cao_nha_tro.xlsx"
+
+
+    df.to_excel(
+        file,
+        index=False
+    )
+
+
+    with open(file,"rb") as f:
+
+        st.download_button(
+            "📥 Tải báo cáo Excel",
+            f,
+            file_name=file
         )
